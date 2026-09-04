@@ -100,7 +100,9 @@ pnpm --filter @bippy-ui/pdf-flipper build
 pnpm --filter next-app dev
 ```
 
-Demo app: `apps/next`. Local `next dev` serves `/catalog.pdf`. `next build` is a static export (`apps/next/out`). GitHub Pages builds with `GITHUB_PAGES=true` so assets and the PDF live under `/bippy-ui/`.
+Demo app: `apps/next`. Local `next dev` serves `/catalog.pdf`. `next build` is a static export (`apps/next/out`); `next start` does not apply — use `npx serve apps/next/out` to preview. GitHub Pages builds with `GITHUB_PAGES=true` so assets and the PDF live under `/bippy-ui/`.
+
+The first Pages deploy needs **Settings → Pages → Source: GitHub Actions** if the workflow fails because Pages is off. After that, [bippydevme.github.io/bippy-ui](https://bippydevme.github.io/bippy-ui/) is the live demo.
 
 ### Publish `@bippy-ui/pdf-flipper`
 

@@ -42,6 +42,7 @@ jobs:
         run: pnpm --filter next-app build
         env:
           GITHUB_PAGES: "true"
+          NEXT_PUBLIC_BASE_PATH: "/bippy-ui"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

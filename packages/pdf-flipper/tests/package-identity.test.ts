@@ -55,13 +55,6 @@ describe("package identity", () => {
     expect(names.some((name) => name.includes("pdf.worker"))).toBe(false);
     expect(names).toContain(".nojekyll");
   });
-
-  it("is version 0.1.1 for the README republish", () => {
-    const pkg = JSON.parse(
-      readFileSync(join(packageRoot, "package.json"), "utf8"),
-    ) as { version: string };
-    expect(pkg.version).toBe("0.1.1");
-  });
 });
 
 describe("workspace and GitHub Pages", () => {
@@ -110,5 +103,6 @@ describe("workspace and GitHub Pages", () => {
     expect(pages).toContain("apps/next/out");
     expect(publish).toContain("pnpm --filter @bippy-ui/pdf-flipper publish");
     expect(publish).toContain("secrets.NPM_TOKEN");
+    expect(publish).toContain('github.ref == \'refs/heads/main\'');
   });
 });

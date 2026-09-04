@@ -43,3 +43,11 @@ jobs:
         run: pnpm --filter next-app build
         env:
           GITHUB_PAGES: "true"
+          NEXT_PUBLIC_BASE_PATH: "/bippy-ui"
+
+      - name: Assert Pages export
+        run: |
+          test -f apps/next/out/.nojekyll
+          test -f apps/next/out/catalog.pdf
+          grep -q '/bippy-ui/catalog.pdf' apps/next/out/index.html
+          grep -q '/bippy-ui/_next/' apps/next/out/index.html
