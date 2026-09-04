@@ -4,6 +4,7 @@ React UI packages under the [`@bippy-ui`](https://www.npmjs.com/org/bippy-ui) sc
 
 [![npm](https://img.shields.io/npm/v/@bippy-ui/pdf-flipper?color=111&label=@bippy-ui/pdf-flipper)](https://www.npmjs.com/package/@bippy-ui/pdf-flipper)
 [![license](https://img.shields.io/github/license/bippydevme/bippy-ui?color=111)](./LICENSE)
+[![demo](https://img.shields.io/badge/demo-github%20pages-111)](https://bippydevme.github.io/bippy-ui/)
 
 ## Packages
 
@@ -14,6 +15,8 @@ React UI packages under the [`@bippy-ui`](https://www.npmjs.com/org/bippy-ui) sc
 ## `@bippy-ui/pdf-flipper`
 
 Spread layout, drag-to-flip, liquid-glass chrome. CSS and the PDF.js 6 legacy worker are bundled — do not copy a worker into `public/`.
+
+Live demo: [bippydevme.github.io/bippy-ui](https://bippydevme.github.io/bippy-ui/)
 
 ### Installation
 
@@ -97,7 +100,19 @@ pnpm --filter @bippy-ui/pdf-flipper build
 pnpm --filter next-app dev
 ```
 
-Demo app: `apps/next` (`<PdfFlipper src="/catalog.pdf" />`).
+Demo app: `apps/next`. Local `next dev` serves `/catalog.pdf`. `next build` is a static export (`apps/next/out`). GitHub Pages builds with `GITHUB_PAGES=true` so assets and the PDF live under `/bippy-ui/`.
+
+### Publish `@bippy-ui/pdf-flipper`
+
+This repo cannot push to npm without an `NPM_TOKEN`. After a version bump, as npm user `bippydev`:
+
+```bash
+pnpm --filter @bippy-ui/pdf-flipper build
+pnpm --filter @bippy-ui/pdf-flipper publish --access public
+npm access set status=public @bippy-ui/pdf-flipper
+```
+
+Or add a granular npm token as the `NPM_TOKEN` Actions secret and run **Actions → Publish pdf-flipper**.
 
 ## License
 

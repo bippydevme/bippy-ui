@@ -1,3 +1,9 @@
 packages:
   - "packages/*"
   - "apps/*"
+
+linkWorkspacePackages: true
+preferWorkspacePackages: true
+
+onlyBuiltDependencies:
+  - esbuild
