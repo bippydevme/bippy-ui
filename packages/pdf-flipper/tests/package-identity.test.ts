@@ -83,12 +83,19 @@ describe("workspace and GitHub Pages", () => {
       join(repoRoot, "apps", "next", "app", "pdf-flipper", "page.tsx"),
       "utf8",
     );
+    const playground = readFileSync(
+      join(repoRoot, "apps", "next", "app", "pdf-flipper", "playground.tsx"),
+      "utf8",
+    );
     expect(config).toContain('output: "export"');
     expect(config).toContain('GITHUB_PAGES === "true"');
     expect(config).toContain('"/bippy-ui"');
     expect(home).toContain('href="/pdf-flipper"');
     expect(demo).toContain("NEXT_PUBLIC_BASE_PATH");
     expect(demo).not.toMatch(/src=["']\/catalog\.pdf["']/);
+    expect(playground).toContain("Theme");
+    expect(playground).toContain("Background");
+    expect(playground).toContain("theme={theme}");
   });
 
   it("has CI, Pages, and publish workflows", () => {
