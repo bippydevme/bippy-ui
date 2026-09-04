@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { buildSpreads } from "../src/navigation";
@@ -57,5 +60,16 @@ describe("loading UI", () => {
         hasError: true,
       }),
     ).toBe(false);
+  });
+
+  it("does not hide turning-sheet canvases with a global canvas-host opacity", () => {
+    const css = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "..", "src", "styles.css"),
+      "utf8",
+    );
+    expect(css).not.toMatch(
+      /\.pdf-flipbook__canvas-host\s*\{[^}]*opacity:\s*0/,
+    );
+    expect(css).not.toContain("pdf-flipbook__leaf--reveal");
   });
 });

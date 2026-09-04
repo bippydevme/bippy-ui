@@ -184,13 +184,11 @@ function BookLeaf({
   pageNumber,
   rendered,
   shimmer,
-  reveal,
 }: {
   side: "left" | "right";
   pageNumber?: number;
   rendered: RenderedPage | undefined;
   shimmer: boolean;
-  reveal: boolean;
 }): ReactElement {
   const painted = Boolean(rendered);
   return (
@@ -200,7 +198,6 @@ function BookLeaf({
         `pdf-flipbook__leaf--${side}`,
         painted ? "pdf-flipbook__leaf--painted" : "pdf-flipbook__leaf--pending",
         shimmer && !painted ? "pdf-flipbook__leaf--shimmer" : null,
-        painted && reveal ? "pdf-flipbook__leaf--reveal" : null,
       ]
         .filter(Boolean)
         .join(" ")}
@@ -760,7 +757,6 @@ export function PdfFlipbook({
     painted,
     hasError: loadState === "error",
   });
-  const reveal = delayElapsed && painted;
   const sheetFrontSource =
     surface.sheetFront === null
       ? undefined
@@ -910,7 +906,6 @@ export function PdfFlipbook({
                   pageNumber={surface.left}
                   rendered={renderedPages.get(surface.left)}
                   shimmer={shimmer}
-                  reveal={reveal}
                 />
               ) : null}
               {surface.right !== null || !currentSpread ? (
@@ -923,7 +918,6 @@ export function PdfFlipbook({
                       : renderedPages.get(surface.right)
                   }
                   shimmer={shimmer}
-                  reveal={reveal}
                 />
               ) : null}
               {direction !== null && (
