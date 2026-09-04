@@ -49,5 +49,7 @@ jobs:
         run: |
           test -f apps/next/out/.nojekyll
           test -f apps/next/out/catalog.pdf
-          grep -q '/bippy-ui/catalog.pdf' apps/next/out/index.html
-          grep -q '/bippy-ui/_next/' apps/next/out/index.html
+          test -f apps/next/out/pdf-flipper/index.html
+          grep -q '/bippy-ui/pdf-flipper' apps/next/out/index.html
+          grep -q '/bippy-ui/catalog.pdf' apps/next/out/pdf-flipper/index.html
+          grep -q '/bippy-ui/_next/' apps/next/out/pdf-flipper/index.html

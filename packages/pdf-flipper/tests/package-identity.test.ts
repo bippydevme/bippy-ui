@@ -75,15 +75,20 @@ describe("workspace and GitHub Pages", () => {
       join(repoRoot, "apps", "next", "next.config.ts"),
       "utf8",
     );
-    const page = readFileSync(
+    const home = readFileSync(
       join(repoRoot, "apps", "next", "app", "page.tsx"),
+      "utf8",
+    );
+    const demo = readFileSync(
+      join(repoRoot, "apps", "next", "app", "pdf-flipper", "page.tsx"),
       "utf8",
     );
     expect(config).toContain('output: "export"');
     expect(config).toContain('GITHUB_PAGES === "true"');
     expect(config).toContain('"/bippy-ui"');
-    expect(page).toContain("NEXT_PUBLIC_BASE_PATH");
-    expect(page).not.toMatch(/src=["']\/catalog\.pdf["']/);
+    expect(home).toContain('href="/pdf-flipper"');
+    expect(demo).toContain("NEXT_PUBLIC_BASE_PATH");
+    expect(demo).not.toMatch(/src=["']\/catalog\.pdf["']/);
   });
 
   it("has CI, Pages, and publish workflows", () => {

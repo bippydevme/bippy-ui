@@ -4,8 +4,8 @@ import type { ReactElement, ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Bippy UI — PDF Flipper",
-  description: "Demo of @bippy-ui/pdf-flipper",
+  title: "Bippy UI",
+  description: "React UI packages under the @bippy-ui scope",
 };
 
 export default function RootLayout({
