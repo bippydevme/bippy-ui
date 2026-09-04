@@ -105,7 +105,7 @@ Demo app: `apps/next`. Local `next dev` serves `/` (package index) and `/pdf-fli
 The first Pages deploy needs **Settings → Pages → Source: GitHub Actions** if the workflow fails because Pages is off. After that:
 
 - [bippydevme.github.io/bippy-ui](https://bippydevme.github.io/bippy-ui/) — package index
-- [bippydevme.github.io/bippy-ui/pdf-flipper](https://bippydevme.github.io/bippy-ui/pdf-flipper/) — `@bippy-ui/pdf-flipper` demo
+- [bippydevme.github.io/bippy-ui/pdf-flipper](https://bippydevme.github.io/bippy-ui/pdf-flipper/) — `@bippy-ui/pdf-flipper` demo, with theme and background controls
 
 ### Publish `@bippy-ui/pdf-flipper`
 

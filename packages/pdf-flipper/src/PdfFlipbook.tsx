@@ -42,7 +42,13 @@ import {
 } from "./navigation";
 import { PageCache } from "./page-cache";
 import { copyRenderedPage } from "./page-copy";
-import { loadPdfDocument, renderPdfPage } from "./pdf-renderer";
+import {
+  LOADING_SHIMMER_DELAY_MS,
+  shouldShimmerPages,
+  spreadBoxAspectRatio,
+  spreadPagesArePainted,
+} from "./load-ui";
+import { loadPdfDocument, readPdfPageMetrics, renderPdfPage } from "./pdf-renderer";
 import { resolveTheme, type PdfFlipbookTheme } from "./theme";
 import { hasToolsPanel, resolveTools, type PdfFlipbookTools } from "./tools";
 import type { PdfSource, RenderedPage } from "./types";
@@ -177,14 +183,27 @@ function BookLeaf({
   side,
   pageNumber,
   rendered,
+  shimmer,
+  reveal,
 }: {
   side: "left" | "right";
-  pageNumber: number;
+  pageNumber?: number;
   rendered: RenderedPage | undefined;
+  shimmer: boolean;
+  reveal: boolean;
 }): ReactElement {
+  const painted = Boolean(rendered);
   return (
     <div
-      className={`pdf-flipbook__leaf pdf-flipbook__leaf--${side}`}
+      className={[
+        "pdf-flipbook__leaf",
+        `pdf-flipbook__leaf--${side}`,
+        painted ? "pdf-flipbook__leaf--painted" : "pdf-flipbook__leaf--pending",
+        shimmer && !painted ? "pdf-flipbook__leaf--shimmer" : null,
+        painted && reveal ? "pdf-flipbook__leaf--reveal" : null,
+      ]
+        .filter(Boolean)
+        .join(" ")}
       data-page={pageNumber}
     >
       <CanvasPage className="pdf-flipbook__canvas-host" page={rendered} />
@@ -227,6 +246,11 @@ export function PdfFlipbook({
 }: PdfFlipbookProps): ReactElement {
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [pageMetrics, setPageMetrics] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+  const [delayElapsed, setDelayElapsed] = useState(false);
   const [pageCount, setPageCount] = useState(0);
   const [spreads, setSpreads] = useState<BookSpread[]>([]);
   const [spreadIndex, setSpreadIndex] = useState(0);
@@ -266,6 +290,14 @@ export function PdfFlipbook({
   useEffect(() => {
     onPageChangeRef.current = onPageChange;
   }, [onPageChange]);
+
+  useEffect(() => {
+    setDelayElapsed(false);
+    const timer = window.setTimeout(() => {
+      setDelayElapsed(true);
+    }, LOADING_SHIMMER_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [src]);
 
   useEffect(() => {
     const onFullscreenChange = () => {
@@ -466,6 +498,7 @@ export function PdfFlipbook({
     setRenderedPages(new Map());
     setLoadState("loading");
     setLoadError(null);
+    setPageMetrics(null);
     setPageCount(0);
     setSpreads([]);
     spreadsRef.current = [];
@@ -490,8 +523,20 @@ export function PdfFlipbook({
         setSpreads(nextSpreads);
         setSpreadIndex(nextIndex);
         setPageCount(document.numPages);
-        setLoadState("ready");
-        return undefined;
+        const openingSpread = nextSpreads[nextIndex] ?? nextSpreads[0];
+        if (!openingSpread) {
+          setLoadState("error");
+          setLoadError("The PDF has no pages.");
+          return undefined;
+        }
+        const firstPage = getSpreadPages(openingSpread)[0] ?? 1;
+        return readPdfPageMetrics(document, firstPage, controller.signal).then(
+          (metrics) => {
+            if (!active || generation !== generationRef.current) return undefined;
+            setPageMetrics(metrics);
+            return undefined;
+          },
+        );
       })
       .catch((error: unknown) => {
         if (
@@ -523,7 +568,7 @@ export function PdfFlipbook({
   }, [cancelTurnResources, resetTurn, src, workerSrc]);
 
   useEffect(() => {
-    if (loadState !== "ready" || !documentRef.current || spreads.length === 0) {
+    if (!documentRef.current || spreads.length === 0) {
       return;
     }
 
@@ -532,50 +577,55 @@ export function PdfFlipbook({
     const controller = new AbortController();
     renderControllerRef.current = controller;
     const scale = getRenderScale(zoom);
-    const pages = pagesForSpreads(spreads, [
+    const currentPages = pagesForSpreads(spreads, [spreadIndex]);
+    const neighborPages = pagesForSpreads(spreads, [
       spreadIndex - 1,
-      spreadIndex,
       spreadIndex + 1,
-    ]);
+    ]).filter((page) => !currentPages.includes(page));
     let active = true;
 
-    void Promise.all(
-      pages.map(async (page) => {
-        const cacheKey = getCacheKey(page, scale);
-        const cached = cacheRef.current.get(cacheKey);
-        if (cached) return [page, cached] as const;
+    const renderOne = async (
+      page: number,
+    ): Promise<readonly [number, RenderedPage]> => {
+      const cacheKey = getCacheKey(page, scale);
+      const cached = cacheRef.current.get(cacheKey);
+      if (cached) return [page, cached] as const;
+      const rendered = await renderPdfPage(
+        document,
+        page,
+        scale,
+        controller.signal,
+      );
+      if (active && generation === generationRef.current) {
+        cacheRef.current.set(cacheKey, rendered);
+      }
+      return [page, rendered] as const;
+    };
 
-        const rendered = await renderPdfPage(
-          document,
-          page,
-          scale,
-          controller.signal,
+    void (async () => {
+      const currentEntries = await Promise.all(currentPages.map(renderOne));
+      if (!active || generation !== generationRef.current) return;
+      setRenderedPages(new Map(currentEntries));
+      setLoadState("ready");
+
+      if (neighborPages.length === 0) return;
+      const neighborEntries = await Promise.all(neighborPages.map(renderOne));
+      if (!active || generation !== generationRef.current) return;
+      setRenderedPages(new Map([...currentEntries, ...neighborEntries]));
+    })().catch((error: unknown) => {
+      if (
+        active &&
+        generation === generationRef.current &&
+        !controller.signal.aborted
+      ) {
+        setLoadState("error");
+        setLoadError(
+          error instanceof Error
+            ? error.message
+            : "The PDF page could not be rendered.",
         );
-        if (active && generation === generationRef.current) {
-          cacheRef.current.set(cacheKey, rendered);
-        }
-        return [page, rendered] as const;
-      }),
-    )
-      .then((entries) => {
-        if (active && generation === generationRef.current) {
-          setRenderedPages(new Map(entries));
-        }
-      })
-      .catch((error: unknown) => {
-        if (
-          active &&
-          generation === generationRef.current &&
-          !controller.signal.aborted
-        ) {
-          setLoadState("error");
-          setLoadError(
-            error instanceof Error
-              ? error.message
-              : "The PDF page could not be rendered.",
-          );
-        }
-      });
+      }
+    });
 
     return () => {
       active = false;
@@ -584,7 +634,7 @@ export function PdfFlipbook({
         renderControllerRef.current = null;
       }
     };
-  }, [loadState, spreadIndex, spreads, zoom]);
+  }, [spreadIndex, spreads, zoom]);
 
   useEffect(
     () => () => {
@@ -701,7 +751,16 @@ export function PdfFlipbook({
         };
   const samplePage =
     renderedPages.get(surface.right ?? surface.left ?? surface.sheetFront ?? 0) ??
-    renderedPages.values().next().value;
+    renderedPages.values().next().value ??
+    pageMetrics ??
+    undefined;
+  const painted = spreadPagesArePainted(currentSpread, renderedPages);
+  const shimmer = shouldShimmerPages({
+    delayElapsed,
+    painted,
+    hasError: loadState === "error",
+  });
+  const reveal = delayElapsed && painted;
   const sheetFrontSource =
     surface.sheetFront === null
       ? undefined
@@ -741,12 +800,12 @@ export function PdfFlipbook({
   ].join(" ");
 
   const pageLabel =
-    loadState === "loading"
-      ? "Loading PDF…"
-      : loadState === "error"
-        ? "PDF unavailable"
-        : currentSpread
-          ? getSpreadLabel(currentSpread)
+    loadState === "error"
+      ? "PDF unavailable"
+      : painted && currentSpread
+        ? getSpreadLabel(currentSpread)
+        : shimmer
+          ? "Loading PDF…"
           : "";
 
   return (
@@ -757,6 +816,7 @@ export function PdfFlipbook({
       style={rootStyle}
       tabIndex={0}
       aria-label="PDF flipbook viewer"
+      aria-busy={loadState !== "error" && !painted}
       onKeyDown={(event) => {
         if (event.key === "Escape") {
           if (isFitScreen) {
@@ -800,14 +860,6 @@ export function PdfFlipbook({
           </button>
         ) : null}
 
-        {loadState === "loading" && (
-          <div className="pdf-flipbook__skeleton" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-          </div>
-        )}
-
         {loadState === "error" && (
           <div className="pdf-flipbook__error" role="alert">
             <strong>Unable to open this PDF.</strong>
@@ -818,14 +870,14 @@ export function PdfFlipbook({
           </div>
         )}
 
-        {loadState === "ready" && currentSpread && (
+        {loadState !== "error" && (
           <div className="pdf-flipbook__viewport">
             <div
               ref={surfaceRef}
               className={[
                 "pdf-flipbook__stage",
                 `pdf-flipbook__stage--${phase}`,
-                `pdf-flipbook__stage--${currentSpread.kind}`,
+                `pdf-flipbook__stage--${currentSpread?.kind ?? "front-cover"}`,
                 direction === 1
                   ? "pdf-flipbook__stage--turn-forward"
                   : direction === -1
@@ -837,7 +889,10 @@ export function PdfFlipbook({
               style={
                 samplePage
                   ? {
-                      aspectRatio: `${samplePage.width * 2} / ${samplePage.height}`,
+                      aspectRatio: spreadBoxAspectRatio(
+                        samplePage.width,
+                        samplePage.height,
+                      ),
                     }
                   : undefined
               }
@@ -849,20 +904,28 @@ export function PdfFlipbook({
                 if (pointerRef.current && phase === "dragging") resetTurn();
               }}
             >
-              {surface.left !== null && (
+              {surface.left !== null ? (
                 <BookLeaf
                   side="left"
                   pageNumber={surface.left}
                   rendered={renderedPages.get(surface.left)}
+                  shimmer={shimmer}
+                  reveal={reveal}
                 />
-              )}
-              {surface.right !== null && (
+              ) : null}
+              {surface.right !== null || !currentSpread ? (
                 <BookLeaf
                   side="right"
-                  pageNumber={surface.right}
-                  rendered={renderedPages.get(surface.right)}
+                  pageNumber={surface.right ?? undefined}
+                  rendered={
+                    surface.right === null
+                      ? undefined
+                      : renderedPages.get(surface.right)
+                  }
+                  shimmer={shimmer}
+                  reveal={reveal}
                 />
-              )}
+              ) : null}
               {direction !== null && (
                 <div
                   className={sheetClassName}

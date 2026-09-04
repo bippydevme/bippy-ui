@@ -79,6 +79,21 @@ export async function loadPdfDocument(
   }
 }
 
+export async function readPdfPageMetrics(
+  document: PDFDocumentProxy,
+  pageNumber: number,
+  signal?: AbortSignal,
+): Promise<{ width: number; height: number }> {
+  const page = await document.getPage(pageNumber);
+  try {
+    if (signal?.aborted) throw getRenderAbortReason(signal);
+    const viewport = page.getViewport({ scale: 1 });
+    return { width: viewport.width, height: viewport.height };
+  } finally {
+    page.cleanup();
+  }
+}
+
 export async function renderPdfPage(
   document: PDFDocumentProxy,
   pageNumber: number,

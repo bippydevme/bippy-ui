@@ -108,7 +108,6 @@
 }
 
 .pdf-flipbook__preview--with-nav .pdf-flipbook__viewport,
-.pdf-flipbook__preview--with-nav .pdf-flipbook__skeleton,
 .pdf-flipbook__preview--with-nav .pdf-flipbook__error {
   grid-column: 2;
 }
@@ -485,7 +484,6 @@
 }
 
 .pdf-flipbook__preview--with-tools .pdf-flipbook__viewport,
-.pdf-flipbook__preview--with-tools .pdf-flipbook__skeleton,
 .pdf-flipbook__preview--with-tools .pdf-flipbook__error {
   padding-bottom: 4.6rem;
 }
@@ -505,6 +503,7 @@
   position: relative;
   width: min(100%, 54rem);
   max-height: min(72vh, 72dvh);
+  aspect-ratio: 17 / 11;
   transform: scale(var(--pdf-flip-zoom));
   transform-origin: center;
   touch-action: none;
@@ -540,6 +539,40 @@
   display: block;
   width: 100%;
   height: 100%;
+}
+
+.pdf-flipbook__canvas-host {
+  position: relative;
+  z-index: 1;
+  opacity: 0;
+}
+
+.pdf-flipbook__leaf--painted .pdf-flipbook__canvas-host {
+  opacity: 1;
+}
+
+.pdf-flipbook__leaf--reveal .pdf-flipbook__canvas-host {
+  transition: opacity 200ms ease-out;
+}
+
+.pdf-flipbook__leaf--pending {
+  background: #f3eee4;
+}
+
+.pdf-flipbook__leaf--shimmer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    rgb(255 255 255 / 0%) 18%,
+    rgb(255 255 255 / 40%) 50%,
+    rgb(255 255 255 / 0%) 82%
+  );
+  background-size: 220% 100%;
+  animation: pdf-flipbook-shimmer 1.3s linear infinite;
 }
 
 .pdf-flipbook__canvas {
@@ -622,35 +655,6 @@
     translateZ(-1.5rem);
 }
 
-.pdf-flipbook__skeleton {
-  display: grid;
-  width: min(80%, 42rem);
-  min-height: 22rem;
-  margin: 0 auto;
-  padding: 3rem;
-  gap: 1rem;
-  align-content: start;
-  border-radius: 0.4rem;
-  background: #f6f1e6;
-  box-shadow: 0 1rem 2rem rgb(24 22 15 / 16%);
-}
-
-.pdf-flipbook__skeleton span {
-  height: 0.8rem;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #ded7c8, #f4efe5, #ded7c8);
-  background-size: 200% 100%;
-  animation: pdf-flipbook-shimmer 1.2s linear infinite;
-}
-
-.pdf-flipbook__skeleton span:nth-child(2) {
-  width: 78%;
-}
-
-.pdf-flipbook__skeleton span:nth-child(3) {
-  width: 55%;
-}
-
 .pdf-flipbook__error {
   display: grid;
   max-width: 36rem;
@@ -722,7 +726,6 @@
   }
 
   .pdf-flipbook__preview--with-tools .pdf-flipbook__viewport,
-  .pdf-flipbook__preview--with-tools .pdf-flipbook__skeleton,
   .pdf-flipbook__preview--with-tools .pdf-flipbook__error {
     padding-bottom: 4.8rem;
   }
@@ -734,7 +737,6 @@
   }
 
   .pdf-flipbook__preview--with-tools .pdf-flipbook__viewport,
-  .pdf-flipbook__preview--with-tools .pdf-flipbook__skeleton,
   .pdf-flipbook__preview--with-tools .pdf-flipbook__error {
     padding-bottom: 4.5rem;
   }
@@ -775,7 +777,6 @@
   }
 
   .pdf-flipbook__preview--with-tools .pdf-flipbook__viewport,
-  .pdf-flipbook__preview--with-tools .pdf-flipbook__skeleton,
   .pdf-flipbook__preview--with-tools .pdf-flipbook__error {
     padding-bottom: 6.35rem;
   }
@@ -808,7 +809,6 @@
   }
 
   .pdf-flipbook__preview--with-tools .pdf-flipbook__viewport,
-  .pdf-flipbook__preview--with-tools .pdf-flipbook__skeleton,
   .pdf-flipbook__preview--with-tools .pdf-flipbook__error {
     padding-bottom: 6rem;
   }
@@ -834,7 +834,6 @@
   }
 
   .pdf-flipbook__preview--with-tools .pdf-flipbook__viewport,
-  .pdf-flipbook__preview--with-tools .pdf-flipbook__skeleton,
   .pdf-flipbook__preview--with-tools .pdf-flipbook__error {
     padding-bottom: 3.5rem;
   }
@@ -846,11 +845,6 @@
   .pdf-flipbook__tools {
     bottom: 0.3rem;
     padding-bottom: max(0.28rem, env(safe-area-inset-bottom, 0px));
-  }
-
-  .pdf-flipbook__skeleton {
-    min-height: 10rem;
-    padding: 1.25rem;
   }
 }
 
@@ -904,7 +898,9 @@
     display: none;
   }
 
-  .pdf-flipbook__skeleton span {
+  .pdf-flipbook__leaf--shimmer::before,
+  .pdf-flipbook__leaf--reveal .pdf-flipbook__canvas-host {
     animation: none;
+    transition: none;
   }
 }
