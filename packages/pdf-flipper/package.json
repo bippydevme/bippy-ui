@@ -1,6 +1,6 @@
 {
   "name": "@bippy-ui/pdf-flipper",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "React PDF flipbook viewer for Bippy UI",
   "type": "module",
   "sideEffects": [

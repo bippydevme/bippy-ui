@@ -8,6 +8,8 @@ React PDF reader that opens like a bound book: cover on the right, interior page
 
 CSS, TypeScript types, and the PDF.js 6 **legacy** worker ship with the package. The host app does not install `pdfjs-dist` and does not copy a worker into `public/`.
 
+Live demo: [bippydevme.github.io/bippy-ui/pdf-flipper](https://bippydevme.github.io/bippy-ui/pdf-flipper/)
+
 ## Installation
 
 ```bash

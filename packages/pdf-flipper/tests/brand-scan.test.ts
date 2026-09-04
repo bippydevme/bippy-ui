@@ -10,6 +10,7 @@ const SKIP_DIRS = new Set([
   ".git",
   ".next",
   "dist",
+  "out",
   "node_modules",
 ]);
 

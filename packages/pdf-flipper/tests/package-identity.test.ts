@@ -53,5 +53,61 @@ describe("package identity", () => {
     const names = existsSync(publicDir) ? readdirSync(publicDir) : [];
     expect(names).not.toContain("pdf.worker.min.mjs");
     expect(names.some((name) => name.includes("pdf.worker"))).toBe(false);
+    expect(names).toContain(".nojekyll");
+  });
+});
+
+describe("workspace and GitHub Pages", () => {
+  it("keeps pnpm 10 settings in pnpm-workspace.yaml", () => {
+    const workspace = readFileSync(join(repoRoot, "pnpm-workspace.yaml"), "utf8");
+    const rootPkg = JSON.parse(
+      readFileSync(join(repoRoot, "package.json"), "utf8"),
+    ) as { pnpm?: unknown };
+    expect(workspace).toContain("onlyBuiltDependencies");
+    expect(workspace).toContain("linkWorkspacePackages: true");
+    expect(workspace).toContain("preferWorkspacePackages: true");
+    expect(rootPkg.pnpm).toBeUndefined();
+    expect(existsSync(join(repoRoot, ".npmrc"))).toBe(false);
+  });
+
+  it("exports the Next demo statically for GitHub Pages", () => {
+    const config = readFileSync(
+      join(repoRoot, "apps", "next", "next.config.ts"),
+      "utf8",
+    );
+    const home = readFileSync(
+      join(repoRoot, "apps", "next", "app", "page.tsx"),
+      "utf8",
+    );
+    const demo = readFileSync(
+      join(repoRoot, "apps", "next", "app", "pdf-flipper", "page.tsx"),
+      "utf8",
+    );
+    expect(config).toContain('output: "export"');
+    expect(config).toContain('GITHUB_PAGES === "true"');
+    expect(config).toContain('"/bippy-ui"');
+    expect(home).toContain('href="/pdf-flipper"');
+    expect(demo).toContain("NEXT_PUBLIC_BASE_PATH");
+    expect(demo).not.toMatch(/src=["']\/catalog\.pdf["']/);
+  });
+
+  it("has CI, Pages, and publish workflows", () => {
+    const ci = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
+    const pages = readFileSync(
+      join(repoRoot, ".github", "workflows", "pages.yml"),
+      "utf8",
+    );
+    const publish = readFileSync(
+      join(repoRoot, ".github", "workflows", "publish.yml"),
+      "utf8",
+    );
+    expect(ci).toContain("pnpm --filter @bippy-ui/pdf-flipper test");
+    expect(ci).toContain("pnpm --filter next-app build");
+    expect(ci).toContain('GITHUB_PAGES: "true"');
+    expect(pages).toContain("actions/upload-pages-artifact");
+    expect(pages).toContain("apps/next/out");
+    expect(publish).toContain("pnpm --filter @bippy-ui/pdf-flipper publish");
+    expect(publish).toContain("secrets.NPM_TOKEN");
+    expect(publish).toContain('github.ref == \'refs/heads/main\'');
   });
 });
