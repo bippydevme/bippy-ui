@@ -544,15 +544,6 @@
 .pdf-flipbook__canvas-host {
   position: relative;
   z-index: 1;
-  opacity: 0;
-}
-
-.pdf-flipbook__leaf--painted .pdf-flipbook__canvas-host {
-  opacity: 1;
-}
-
-.pdf-flipbook__leaf--reveal .pdf-flipbook__canvas-host {
-  transition: opacity 200ms ease-out;
 }
 
 .pdf-flipbook__leaf--pending {
@@ -898,9 +889,7 @@
     display: none;
   }
 
-  .pdf-flipbook__leaf--shimmer::before,
-  .pdf-flipbook__leaf--reveal .pdf-flipbook__canvas-host {
+  .pdf-flipbook__leaf--shimmer::before {
     animation: none;
-    transition: none;
   }
 }
