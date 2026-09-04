@@ -1,0 +1,17 @@
+{
+  "name": "bippy-ui",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.3",
+  "scripts": {
+    "build": "pnpm --filter @bippy-ui/pdf-flipper build && pnpm --filter next-app build",
+    "dev": "pnpm --filter @bippy-ui/pdf-flipper build && pnpm --filter next-app dev",
+    "test": "pnpm --filter @bippy-ui/pdf-flipper test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}

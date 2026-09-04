@@ -1,0 +1,56 @@
+{
+  "name": "@bippy-ui/pdf-flipper",
+  "version": "0.1.0",
+  "description": "React PDF flipbook viewer for Bippy UI",
+  "type": "module",
+  "sideEffects": [
+    "**/*.css",
+    "./src/pdfjs-compat.ts"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./pdf.worker.min.mjs": "./dist/pdf.worker.min.mjs"
+  },
+  "files": [
+    "dist",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "tsup && node ./scripts/copy-assets.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "react": "^18 || ^19",
+    "react-dom": "^18 || ^19"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^6.3.289"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bippydevme/bippy-ui.git",
+    "directory": "packages/pdf-flipper"
+  },
+  "license": "MIT"
+}
